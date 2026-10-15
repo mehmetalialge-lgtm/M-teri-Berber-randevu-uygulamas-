@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Berberim | Randevu Al</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:#10141c;
+  color:#fff;
+  font-family:Arial,sans-serif;
+}
+header{
+  padding:25px 20px;
+  background:#171e2a;
+  text-align:center;
+  border-bottom:1px solid #303949;
+}
+.logo{font-size:30px}
+header h1{margin:10px 0 5px;font-size:25px}
+header p{margin:0;color:#aab4c5}
+main{max-width:500px;margin:22px auto;padding:0 16px}
+.card{
+  background:#1a2230;
+  padding:20px;
+  border-radius:16px;
+  margin-bottom:16px;
+  border:1px solid #303949;
+}
+h2{font-size:19px;margin:0 0 17px}
+label{display:block;margin:13px 0 7px;color:#dce3ed}
+input,select{
+  width:100%;
+  padding:13px;
+  border-radius:9px;
+  border:1px solid #3b4658;
+  background:#101722;
+  color:white;
+  font-size:16px;
+}
+button{
+  width:100%;
+  padding:14px;
+  border:0;
+  border-radius:10px;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+.primary{background:#d6ad65;color:#17120a;margin-top:18px}
+.secondary{background:#303b4e;color:white;margin-top:10px}
+.note{font-size:13px;color:#aab4c5;line-height:1.5}
+.price{
+  display:flex;
+  justify-content:space-between;
+  padding:11px 0;
+  border-bottom:1px solid #303949;
+}
+.price:last-child{border:0}
+#sonuc{margin-top:14px;line-height:1.5}
+.appointment{
+  padding:12px;
+  background:#101722;
+  border-radius:10px;
+  margin-top:10px;
+  line-height:1.6;
+}
+footer{text-align:center;color:#7f8a9b;padding:20px;font-size:12px}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="logo">✂️</div>
+  <h1>BERBERİM</h1>
+  <p>Randevunu kolayca oluştur</p>
+</header>
+
+<main>
+
+<section class="card">
+  <h2>📅 Randevu Oluştur</h2>
+
+  <form id="randevuForm">
+    <label for="ad">Adın ve soyadın</label>
+    <input id="ad" type="text" placeholder="Adını yaz" required>
+
+    <label for="telefon">Telefon numaran</label>
+    <input id="telefon" type="tel" placeholder="05XX XXX XX XX"
+      maxlength="15" required>
+
+    <label for="berber">Berberini seç</label>
+    <select id="berber" required>
+      <option value="Mehmet Ali">Mehmet Ali</option>
+      <option value="Usta">Usta</option>
+    </select>
+
+    <label for="hizmet">Alacağın hizmet</label>
+    <select id="hizmet" required>
+      <option value="Saç">Saç kesimi — 250 TL</option>
+      <option value="Sakal">Sakal — 100 TL</option>
+      <option value="Saç ve Sakal">Saç ve sakal — 350 TL</option>
+    </select>
+
+    <label for="tarih">Randevu tarihi</label>
+    <input id="tarih" type="date" required>
+
+    <label for="saat">Randevu saati</label>
+    <select id="saat" required>
+      <option value="">Önce tarih seç</option>
+    </select>
+
+    <button class="primary" type="submit">RANDEVU TALEBİ GÖNDER</button>
+  </form>
+
+  <div id="sonuc" aria-live="polite"></div>
+  <p class="note">
+    Randevun gönderildikten sonra berberinin onayını beklemelisin.
+    Randevunun kesinleşmesi için onay gerekir.
+  </p>
+</section>
+
+<section class="card">
+  <h2>💈 Hizmetlerimiz</h2>
+  <div class="price"><span>Saç kesimi</span><strong>250 TL</strong></div>
+  <div class="price"><span>Sakal</span><strong>100 TL</strong></div>
+  <div class="price"><span>Saç ve sakal</span><strong>350 TL</strong></div>
+</section>
+
+<section class="card">
+  <h2>📋 Bu cihazdaki talepler</h2>
+  <div id="talepler"></div>
+  <button class="secondary" type="button" onclick="talepleriGoster()">
+    Taleplerimi yenile
+  </button>
+  <p class="note">
+    Bu bölüm yalnızca bu tarayıcıda kaydedilen talepleri gösterir.
+    Hesap sistemi ve çevrim içi senkronizasyon henüz kurulmadı.
+  </p>
+</section>
+
+</main>
+
+<footer>© Berberim — Randevu Asistanı</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const tarihInput = $("tarih");
+const bugun = new Date();
+const yerelBugun = new Date(
+  bugun.getTime() - bugun.getTimezoneOffset() * 60000
+).toISOString().split("T")[0];
+
+tarihInput.min = yerelBugun;
+
+function saatleriOlustur(){
+  const tarih = tarihInput.value;
+  const saatSec = $("saat");
+  saatSec.innerHTML = "";
+
+  if(!tarih){
+    saatSec.innerHTML = '<option value="">Önce tarih seç</option>';
+    return;
+  }
+
+  saatSec.add(new Option("Saat seç", ""));
+
+  for(let h=9; h<=18; h++){
+    for(let m of [0,30]){
+      const saat = String(h).padStart(2,"0")+":"+
+                   String(m).padStart(2,"0");
+
+      if(h===18 && m===30 || h>18) continue;
+
+      if(tarih===yerelBugun){
+        const [sh,sm]=saat.split(":").map(Number);
+        const secilen = new Date();
+        secilen.setHours(sh,sm,0,0);
+        if(secilen<=new Date()) continue;
+      }
+
+      saatSec.add(new Option(saat,saat));
+    }
+  }
+}
+
+tarihInput.addEventListener("change", saatleriOlustur);
+
+function talepleriGoster(){
+  const liste = JSON.parse(localStorage.getItem("musteriRandevulari")||"[]");
+  const alan = $("talepler");
+
+  if(!liste.length){
+    alan.innerHTML='<p class="note">Henüz randevu talebin yok.</p>';
+    return;
+  }
+
+  alan.innerHTML = liste.slice().reverse().map(r=>`
+    <div class="appointment">
+      <strong>${guvenli(r.berber)} — ${guvenli(r.hizmet)}</strong><br>
+      ${guvenli(r.tarih)} / ${guvenli(r.saat)}<br>
+      Durum: ${guvenli(r.durum)}
+    </div>
+  `).join("");
+}
+
+function guvenli(metin){
+  return String(metin).replace(/[&<>"']/g, karakter=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[karakter]);
+}
+
+$("randevuForm").addEventListener("submit", function(e){
+  e.preventDefault();
+
+  const ad=$("ad").value.trim();
+  const telefon=$("telefon").value.trim();
+  const berber=$("berber").value;
+  const hizmet=$("hizmet").value;
+  const tarih=$("tarih").value;
+  const saat=$("saat").value;
+
+  if(!ad || !telefon || !tarih || !saat){
+    $("sonuc").textContent="Lütfen bütün alanları doldur.";
+    return;
+  }
+
+  if(tarih<yerelBugun){
+    $("sonuc").textContent="Geçmiş bir tarihe randevu alamazsın.";
+    return;
+  }
+
+  const liste=JSON.parse(localStorage.getItem("musteriRandevulari")||"[]");
+
+  const cakisma=liste.some(r=>
+    r.berber===berber && r.tarih===tarih && r.saat===saat &&
+    r.durum!=="Reddedildi" && r.durum!=="İptal"
+  );
+
+  if(cakisma){
+    $("sonuc").textContent="Bu saatte bu tarayıcıda başka bir talep var. Başka saat seç.";
+    return;
+  }
+
+  const yeni={
+    id:Date.now(),
+    ad,telefon,berber,hizmet,tarih,saat,
+    durum:"Onay Bekliyor"
+  };
+
+  liste.push(yeni);
+  localStorage.setItem("musteriRandevulari",JSON.stringify(liste));
+
+  $("sonuc").textContent=
+    "Randevu talebin bu cihazda kaydedildi. Berber onayı henüz alınmadı.";
+
+  $("randevuForm").reset();
+  tarihInput.min=yerelBugun;
+  saatleriOlustur();
+  talepleriGoster();
+});
+
+talepleriGoster();
+</script>
+</body>
+</html>
